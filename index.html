@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shipment Documents Matrix</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff; --bg2: #f5f5f3; --bg3: #efefec;
+    --text: #1a1a18; --text2: #5f5e5a; --text3: #888780;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+    --radius: 8px; --radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1e1c; --bg2: #2a2a27; --bg3: #333330;
+      --text: #f0ede6; --text2: #b4b2a9; --text3: #888780;
+      --border: rgba(255,255,255,0.12); --border2: rgba(255,255,255,0.22);
+    }
+    .p-ci{background:#0C447C;color:#B5D4F4} .p-ci2{background:#791F1F;color:#F7C1C1}
+    .p-g7{background:#27500A;color:#C0DD97} .p-ps{background:#444441;color:#D3D1C7}
+    .p-dof{background:#72243E;color:#F4C0D1} .p-dd{background:#3B6D11;color:#C0DD97}
+    .p-sc{background:#3C3489;color:#CECBF6} .p-frg{background:#085041;color:#9FE1CB}
+    .p-urd{background:#712B13;color:#F5C4B3} .p-fi{background:#854F0B;color:#FAC775}
+    .p-id{background:#534AB7;color:#EEEDFE}
+    .bt-cust{background:#0C447C;color:#B5D4F4} .bt-inter{background:#3C3489;color:#CECBF6}
+    .bt-cr{background:#854F0B;color:#FAC775} .bt-sup{background:#27500A;color:#C0DD97}
+    .bt-sr{background:#993C1D;color:#F5C4B3}
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; }
+  header { background: var(--bg); border-bottom: 0.5px solid var(--border); padding: 1rem 1.5rem; display: flex; align-items: baseline; gap: 12px; }
+  header h1 { font-size: 17px; font-weight: 500; }
+  header span { font-size: 13px; color: var(--text3); }
+  .main { max-width: 1100px; margin: 1.5rem auto; padding: 0 1rem 2rem; }
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; }
+  select {
+    padding: 7px 11px; border-radius: var(--radius); border: 0.5px solid var(--border2);
+    background: var(--bg); color: var(--text); font-size: 13px; cursor: pointer; outline: none;
+  }
+  select:focus { box-shadow: 0 0 0 2px rgba(55,138,221,0.35); }
+  .search { padding: 7px 11px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg); color: var(--text); font-size: 13px; outline: none; min-width: 180px; }
+  .search:focus { box-shadow: 0 0 0 2px rgba(55,138,221,0.35); }
+  .legend { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 1rem; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 0.75rem 1rem; }
+  .leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); }
+  .leg-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .table-wrap { overflow-x: auto; border: 0.5px solid var(--border); border-radius: var(--radius-lg); background: var(--bg); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: var(--bg2); padding: 9px 12px; text-align: left; font-weight: 500; color: var(--text2); border-bottom: 0.5px solid var(--border); white-space: nowrap; font-size: 12px; }
+  td { padding: 8px 12px; border-bottom: 0.5px solid var(--border); color: var(--text); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg2); }
+  .from { font-weight: 500; }
+  .pills { display: flex; flex-wrap: wrap; gap: 4px; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+  .p-ci{background:#B5D4F4;color:#0C447C} .p-ci2{background:#F7C1C1;color:#791F1F}
+  .p-g7{background:#C0DD97;color:#27500A} .p-ps{background:#D3D1C7;color:#444441}
+  .p-dof{background:#F4C0D1;color:#72243E} .p-dd{background:#EAF3DE;color:#3B6D11}
+  .p-sc{background:#CECBF6;color:#3C3489} .p-frg{background:#9FE1CB;color:#085041}
+  .p-urd{background:#F5C4B3;color:#712B13} .p-fi{background:#FAEEDA;color:#854F0B}
+  .p-id{background:#EEEDFE;color:#534AB7}
+  .badge-type { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+  .bt-cust{background:#E6F1FB;color:#185FA5} .bt-inter{background:#EEEDFE;color:#534AB7}
+  .bt-cr{background:#FAEEDA;color:#854F0B} .bt-sup{background:#EAF3DE;color:#3B6D11}
+  .bt-sr{background:#FAECE7;color:#993C1D}
+  .count { margin-top: 10px; font-size: 12px; color: var(--text3); }
+  .empty-row td { text-align: center; padding: 2rem; color: var(--text3); }
+  .clear-btn { font-size: 12px; color: var(--text3); background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: var(--radius); text-decoration: underline; }
+  .clear-btn:hover { color: var(--text); }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1.25rem; }
+  .stat { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 0.75rem 1rem; }
+  .stat-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+  .stat-val { font-size: 20px; font-weight: 500; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Shipment documents matrix</h1>
+  <span>Required documents by route and shipment type</span>
+</header>
+<div class="main">
+  <div class="stats" id="stats"></div>
+  <div class="controls">
+    <select id="typeFilter">
+      <option value="ALL">All shipment types</option>
+      <option value="CUSTOMER">Customer</option>
+      <option value="INTERHUB">Interhub</option>
+      <option value="CUSTOMER_RETURN">Customer return</option>
+      <option value="SUPPLIER">Supplier</option>
+      <option value="SUPPLIER_RETURN">Supplier return</option>
+    </select>
+    <select id="docFilter"><option value="ALL">All documents</option></select>
+    <select id="fromFilter"><option value="ALL">All origins</option></select>
+    <select id="toFilter"><option value="ALL">All destinations</option></select>
+    <button class="clear-btn" onclick="clearFilters()">Clear filters</button>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Type</th><th>From</th><th>To</th><th>Required documents</th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <div class="count" id="count"></div>
+</div>
+<script>
+const data = {"CUSTOMER":{"AE":{"AE":["PACKAGING_SLIP"]},"AU":{"NZ":["COMMERCIAL_INVOICE","G7_DECLARATION"]},"HK":{"TH":["COMMERCIAL_INVOICE","G7_DECLARATION"],"TW":["COMMERCIAL_INVOICE","G7_DECLARATION"],"SG":["COMMERCIAL_INVOICE","G7_DECLARATION"],"MY":["COMMERCIAL_INVOICE","G7_DECLARATION"],"IL":["COMMERCIAL_INVOICE","G7_DECLARATION"],"JP":["COMMERCIAL_INVOICE","G7_DECLARATION"]},"NL":{"CA":["COMMERCIAL_INVOICE","DIAMOND_ORIGIN_FORM","PACKAGING_SLIP","G7_DECLARATION"],"AZ":["COMMERCIAL_INVOICE","G7_DECLARATION","DUE_DILIGENCE"],"GE":["COMMERCIAL_INVOICE","G7_DECLARATION","DUE_DILIGENCE"],"LATAM":["COMMERCIAL_INVOICE","G7_DECLARATION"],"CH":["COMMERCIAL_INVOICE","G7_DECLARATION","DUE_DILIGENCE"]},"US":{"CA":["COMMERCIAL_INVOICE","DIAMOND_ORIGIN_FORM","PACKAGING_SLIP","G7_DECLARATION"],"LATAM":["COMMERCIAL_INVOICE","G7_DECLARATION"]}},"INTERHUB":{"AE":{"AU":["COMMERCIAL_INVOICE","G7_DECLARATION"],"GB":["COMMERCIAL_INVOICE","G7_DECLARATION"],"HK":["COMMERCIAL_INVOICE","G7_DECLARATION"],"NL":["COMMERCIAL_INVOICE","G7_DECLARATION","DUE_DILIGENCE"],"US":["COMMERCIAL_INVOICE","G7_DECLARATION","SELF_CERTIFICATION","FOREIGN_RETURN_GOODS_DOCUMENTS","US_RETURN_GOODS_DOCUMENT"],"ZA":["COMMERCIAL_INVOICE_X2","G7_DECLARATION"]},"AU":{"AE":["COMMERCIAL_INVOICE_X2","G7_DECLARATION"],"GB":["COMMERCIAL_INVOICE","G7_DECLARATION"],"HK":["COMMERCIAL_INVOICE","G7_DECLARATION"],"NL":["COMMERCIAL_INVOICE","G7_DECLARATION","DUE_DILIGENCE"],"US":["COMMERCIAL_INVOICE","G7_DECLARATION","SELF_CERTIFICATION","FOREIGN_RETURN_GOODS_DOCUMENTS","US_RETURN_GOODS_DOCUMENT"],"ZA":["COMMERCIAL_INVOICE_X2","G7_DECLARATION"]},"GB":{"AE":["COMMERCIAL_INVOICE_X2","G7_DECLARATION"],"AU":["COMMERCIAL_INVOICE","G7_DECLARATION"],"HK":["COMMERCIAL_INVOICE","G7_DECLARATION"],"NL":["COMMERCIAL_INVOICE","G7_DECLARATION","DUE_DILIGENCE"],"US":["COMMERCIAL_INVOICE","G7_DECLARATION","SELF_CERTIFICATION","FOREIGN_RETURN_GOODS_DOCUMENTS","US_RETURN_GOODS_DOCUMENT"],"ZA":["COMMERCIAL_INVOICE_X2","G7_DECLARATION"]},"HK":{"AE":["COMMERCIAL_INVOICE_X2","G7_DECLARATION"],"AU":["COMMERCIAL_INVOICE","G7_DECLARATION"],"GB":["COMMERCIAL_INVOICE","G7_DECLARATION"],"NL":["COMMERCIAL_INVOICE","G7_DECLARATION","DUE_DILIGENCE"],"US":["COMMERCIAL_INVOICE","G7_DECLARATION","SELF_CERTIFICATION","FOREIGN_RETURN_GOODS_DOCUMENTS","US_RETURN_GOODS_DOCUMENT"],"ZA":["COMMERCIAL_INVOICE_X2","G7_DECLARATION"]},"NL":{"AE":["COMMERCIAL_INVOICE_X2","G7_DECLARATION"],"AU":["COMMERCIAL_INVOICE","G7_DECLARATION"],"GB":["COMMERCIAL_INVOICE","G7_DECLARATION"],"HK":["COMMERCIAL_INVOICE","G7_DECLARATION"],"US":["COMMERCIAL_INVOICE","G7_DECLARATION","SELF_CERTIFICATION","FOREIGN_RETURN_GOODS_DOCUMENTS","US_RETURN_GOODS_DOCUMENT"],"ZA":["COMMERCIAL_INVOICE_X2","G7_DECLARATION"]},"US":{"AU":["COMMERCIAL_INVOICE","G7_DECLARATION"],"GB":["COMMERCIAL_INVOICE","G7_DECLARATION"],"HK":["COMMERCIAL_INVOICE","G7_DECLARATION"],"NL":["COMMERCIAL_INVOICE","G7_DECLARATION","DUE_DILIGENCE"],"ZA":["COMMERCIAL_INVOICE_X2","G7_DECLARATION"]}},"CUSTOMER_RETURN":{"AE":{"AE":["PACKAGING_SLIP"]},"AZ":{"NL":["COMMERCIAL_INVOICE","PACKAGING_SLIP"]},"CA":{"US":["COMMERCIAL_INVOICE","FOREIGN_ORIGIN_DOCUMENT","IMPORTER_DECLARATION","SELF_CERTIFICATION","G7_DECLARATION"],"NL":["COMMERCIAL_INVOICE","G7_DECLARATION","DUE_DILIGENCE"]},"CH":{"NL":["COMMERCIAL_INVOICE","G7_DECLARATION","PACKAGING_SLIP"]},"EU":{"NL":["COMMERCIAL_INVOICE","G7_DECLARATION","PACKAGING_SLIP","DUE_DILIGENCE"]},"GE":{"NL":["COMMERCIAL_INVOICE","G7_DECLARATION","DUE_DILIGENCE"]},"LATAM":{"NL":["COMMERCIAL_INVOICE","G7_DECLARATION","PACKAGING_SLIP"],"US":["COMMERCIAL_INVOICE","G7_DECLARATION","PACKAGING_SLIP","FOREIGN_ORIGIN_DOCUMENT","IMPORTER_DECLARATION"]},"NL":{"NL":["DUE_DILIGENCE"]},"NZ":{"AU":["COMMERCIAL_INVOICE","PACKAGING_SLIP"]},"TH":{"HK":["COMMERCIAL_INVOICE","PACKAGING_SLIP"]},"US":{"US":["PACKAGING_SLIP"]}},"SUPPLIER":{"CA":{"US":["COMMERCIAL_INVOICE","G7_DECLARATION","PACKAGING_SLIP","SELF_CERTIFICATION"],"NL":["COMMERCIAL_INVOICE","G7_DECLARATION","PACKAGING_SLIP","DUE_DILIGENCE"],"GB":["COMMERCIAL_INVOICE","G7_DECLARATION","PACKAGING_SLIP"],"HK":["COMMERCIAL_INVOICE","G7_DECLARATION","PACKAGING_SLIP"],"AU":["COMMERCIAL_INVOICE","G7_DECLARATION","PACKAGING_SLIP"]},"EU":{"NL":["G7_DECLARATION","PACKAGING_SLIP","DUE_DILIGENCE"]},"JP":{"HK":["COMMERCIAL_INVOICE","PACKAGING_SLIP"]},"TH":{"HK":["COMMERCIAL_INVOICE","PACKAGING_SLIP"]},"US":{"US":["PACKAGING_SLIP"]}},"SUPPLIER_RETURN":{"US":{"US":["PACKAGING_SLIP"]},"AE":{"AE":["PACKAGING_SLIP"]},"AU":{"CA":["COMMERCIAL_INVOICE","DIAMOND_ORIGIN_FORM","PACKAGING_SLIP","G7_DECLARATION"]},"HK":{"TH":["COMMERCIAL_INVOICE","G7_DECLARATION"],"IL":["COMMERCIAL_INVOICE","G7_DECLARATION"],"JP":["COMMERCIAL_INVOICE","G7_DECLARATION"]},"NL":{"EU":["G7_DECLARATION","PACKAGING_SLIP"]}}};
+
+const DOC_META = {
+  COMMERCIAL_INVOICE:{label:'Commercial invoice',cls:'p-ci',dot:'#378ADD'},
+  COMMERCIAL_INVOICE_X2:{label:'Commercial invoice ×2',cls:'p-ci2',dot:'#E24B4A'},
+  G7_DECLARATION:{label:'G7 declaration',cls:'p-g7',dot:'#639922'},
+  PACKAGING_SLIP:{label:'Packaging slip',cls:'p-ps',dot:'#888780'},
+  DIAMOND_ORIGIN_FORM:{label:'Diamond origin form',cls:'p-dof',dot:'#D4537E'},
+  DUE_DILIGENCE:{label:'Due diligence',cls:'p-dd',dot:'#3B6D11'},
+  SELF_CERTIFICATION:{label:'Self certification',cls:'p-sc',dot:'#7F77DD'},
+  FOREIGN_RETURN_GOODS_DOCUMENTS:{label:'Foreign return goods',cls:'p-frg',dot:'#1D9E75'},
+  US_RETURN_GOODS_DOCUMENT:{label:'US return goods doc',cls:'p-urd',dot:'#D85A30'},
+  FOREIGN_ORIGIN_DOCUMENT:{label:'Foreign origin doc',cls:'p-fi',dot:'#BA7517'},
+  IMPORTER_DECLARATION:{label:'Importer declaration',cls:'p-id',dot:'#7F77DD'},
+};
+const TYPE_META = {
+  CUSTOMER:{label:'Customer',cls:'bt-cust'},
+  INTERHUB:{label:'Interhub',cls:'bt-inter'},
+  CUSTOMER_RETURN:{label:'Customer return',cls:'bt-cr'},
+  SUPPLIER:{label:'Supplier',cls:'bt-sup'},
+  SUPPLIER_RETURN:{label:'Supplier return',cls:'bt-sr'},
+};
+
+function flatRows(){
+  const rows=[];
+  for(const [type,froms] of Object.entries(data))
+    for(const [from,tos] of Object.entries(froms))
+      for(const [to,docs] of Object.entries(tos))
+        rows.push({type,from,to,docs});
+  return rows;
+}
+const allRows = flatRows();
+const allDocs = [...new Set(allRows.flatMap(r=>r.docs))].sort();
+const allFroms = [...new Set(allRows.map(r=>r.from))].sort();
+const allTos = [...new Set(allRows.map(r=>r.to))].sort();
+
+const docSel=document.getElementById('docFilter');
+allDocs.forEach(d=>{ const o=document.createElement('option'); o.value=d; o.textContent=DOC_META[d]?.label||d; docSel.appendChild(o); });
+
+const fromSel=document.getElementById('fromFilter');
+allFroms.forEach(f=>{ const o=document.createElement('option'); o.value=f; o.textContent=f; fromSel.appendChild(o); });
+
+const toSel=document.getElementById('toFilter');
+allTos.forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; toSel.appendChild(o); });
+
+const legend=document.getElementById('legend');
+Object.entries(DOC_META).forEach(([k,v])=>{
+  const d=document.createElement('div'); d.className='leg';
+  d.innerHTML=`<span class="leg-dot" style="background:${v.dot}"></span><span>${v.label}</span>`;
+  legend.appendChild(d);
+});
+
+function renderStats(rows){
+  const totalRoutes=rows.length;
+  const types=new Set(rows.map(r=>r.type)).size;
+  const docSet=new Set(rows.flatMap(r=>r.docs));
+  const maxDocs=Math.max(...rows.map(r=>r.docs.length));
+  document.getElementById('stats').innerHTML=`
+    <div class="stat"><div class="stat-label">Routes shown</div><div class="stat-val">${totalRoutes}</div></div>
+    <div class="stat"><div class="stat-label">Shipment types</div><div class="stat-val">${types}</div></div>
+    <div class="stat"><div class="stat-label">Doc types used</div><div class="stat-val">${docSet.size}</div></div>
+    <div class="stat"><div class="stat-label">Max docs on a route</div><div class="stat-val">${maxDocs}</div></div>`;
+}
+
+function render(){
+  const tf=document.getElementById('typeFilter').value;
+  const df=document.getElementById('docFilter').value;
+  const ff=document.getElementById('fromFilter').value;
+  const tof=document.getElementById('toFilter').value;
+  let rows=allRows;
+  if(tf!=='ALL') rows=rows.filter(r=>r.type===tf);
+  if(df!=='ALL') rows=rows.filter(r=>r.docs.includes(df));
+  if(ff!=='ALL') rows=rows.filter(r=>r.from===ff);
+  if(tof!=='ALL') rows=rows.filter(r=>r.to===tof);
+  renderStats(rows);
+  const tbody=document.getElementById('tbody');
+  tbody.innerHTML='';
+  if(rows.length===0){
+    tbody.innerHTML='<tr class="empty-row"><td colspan="4">No routes match these filters</td></tr>';
+  } else {
+    rows.forEach(r=>{
+      const tm=TYPE_META[r.type];
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td><span class="badge-type ${tm.cls}">${tm.label}</span></td>
+        <td class="from">${r.from}</td>
+        <td>${r.to}</td>
+        <td><div class="pills">${r.docs.map(d=>`<span class="pill ${DOC_META[d]?.cls||'p-ps'}">${DOC_META[d]?.label||d}</span>`).join('')}</div></td>`;
+      tbody.appendChild(tr);
+    });
+  }
+  document.getElementById('count').textContent=`${rows.length} route${rows.length!==1?'s':''} shown of ${allRows.length} total`;
+}
+
+function clearFilters(){
+  ['typeFilter','docFilter','fromFilter','toFilter'].forEach(id=>document.getElementById(id).value='ALL');
+  render();
+}
+
+['typeFilter','docFilter','fromFilter','toFilter'].forEach(id=>document.getElementById(id).addEventListener('change',render));
+render();
+</script>
+</body>
+</html>
